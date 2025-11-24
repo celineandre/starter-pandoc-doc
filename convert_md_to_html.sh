@@ -4,13 +4,14 @@
 INPUT_DIR="./src"
 
 # Dossier de sortie
-OUTPUT_DIR="./dist/DOCX"
+OUTPUT_DIR="./dist/HTML"
 
 # Template
-DOCX_TEMPLATE="./template/template.docx"
+STYLE_TEMPLATE="./template/pandoc.css"
+FOOTER_TEMPLATE="./template/footer.html"
 
 # Nom du fichier d'index
-INDEX_NAME="_index"
+INDEX_NAME="index"
 
 # Vider le dossier de sortie s'il existe
 if [ -d "$OUTPUT_DIR" ]; then
@@ -22,13 +23,25 @@ else
 fi
 
 # Vérifie le template
-if [ ! -f "$DOCX_TEMPLATE" ]; then
-  echo "❌ Template introuvable : $DOCX_TEMPLATE"
+if [ ! -f "$STYLE_TEMPLATE" ]; then
+  echo "❌ Template introuvable : $STYLE_TEMPLATE"
   exit 1
 fi
 
+if [ ! -f "$FOOTER_TEMPLATE" ]; then
+  echo "❌ Template introuvable : $FOOTER_TEMPLATE"
+  exit 1
+fi
+
+# Copier le dossier des images
+cp -r "$INPUT_DIR/img" "$OUTPUT_DIR/"
+
+# Copier le style
+mkdir -p "$OUTPUT_DIR/template/"
+cp -r "./template/pandoc.css" "$OUTPUT_DIR/template/"
+
 INDEX_MD="$OUTPUT_DIR/$INDEX_NAME.md"
-echo "# Index des documents" > "$INDEX_MD"
+echo "# Index des fichiers HTML" > "$INDEX_MD"
 echo "" >> "$INDEX_MD"
 
 # Conversion des fichiers Markdown à la racine de INPUT_DIR
@@ -37,34 +50,36 @@ for file in "$INPUT_DIR"/*.md "$INPUT_DIR"/*.mdr; do
 
   filename=$(basename "$file")
   name="${filename%.*}"
-  output_docx="$OUTPUT_DIR/$name.docx"
+  output_html="$OUTPUT_DIR/$name.html"
 
-  echo "Conversion : $file → $output_docx"
+  echo "Conversion : $file → $output_html"
 
   pandoc "$file" \
     --standalone \
-    --reference-doc="$DOCX_TEMPLATE" \
+    --css="$STYLE_TEMPLATE" \
+    --include-after-body="$FOOTER_TEMPLATE" \
     --resource-path="$INPUT_DIR" \
-    -o "$output_docx"
+    -o "$output_html"
 
   # Extraction du titre H1
   title=$(grep -m 1 "^# " "$file" | sed 's/^# //')
   [ -z "$title" ] && title="$name"
 
   # Ajout dans l'index (lien cliquable)
-  echo "- [$title]($name.docx)" >> "$INDEX_MD"
+  echo "- [$title]($name.html)" >> "$INDEX_MD"
 done
 
-# Génération de index.docx
+# Génération de index.html
 pandoc "$INDEX_MD" \
   --standalone \
-  --reference-doc="$DOCX_TEMPLATE" \
+  --css="$STYLE_TEMPLATE" \
+  --include-after-body="$FOOTER_TEMPLATE" \
   --resource-path="$INPUT_DIR" \
-  -o "$OUTPUT_DIR/$INDEX_NAME.docx"
+  -o "$OUTPUT_DIR/$INDEX_NAME.html"
 
 # Suppression du fichier index.md temporaire
 rm "$INDEX_MD"
 
 echo "✔ Terminé !"
-echo "📁 Fichiers DOCX générés dans : $OUTPUT_DIR"
-echo "📄 Index généré dans : $OUTPUT_DIR/$INDEX_NAME.docx"
+echo "📁 Fichiers HTML générés dans : $OUTPUT_DIR"
+echo "📄 Index généré dans : $OUTPUT_DIR/$INDEX_NAME.html"

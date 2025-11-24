@@ -10,7 +10,13 @@ Installer [Pandoc](https://pandoc.org/installing.html)
 
 Exécution du script pour générer pour chaque fichier du dossier "src" un fichier au format choisi dans le dossier "dist".
 
-- "src/fichier.md" > "dist/fichier.docx" :
+- "src/fichier.md" > "dist/DOCX/fichier.docx" :
+
+  ```bash
+  ./convert_md_to_docx.sh
+  ```
+
+- "src/fichier.md" > "dist/HTML/fichier.html" :
 
   ```bash
   ./convert_md_to_docx.sh

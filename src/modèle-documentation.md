@@ -9,3 +9,5 @@ version: "1.0"
 ## Introduction
 
 Lorem ipsum
+
+![](img/default.png){ width=240px }
